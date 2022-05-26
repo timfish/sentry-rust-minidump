@@ -3,7 +3,7 @@ use std::time::Duration;
 fn main() {
     sentry_rust_minidump::init(
         sentry::release_name!(),
-        || {
+        |_| {
             // This code will run in both processes and setup sentry
             sentry::init((
                 "https://233a45e5efe34c47a3536797ce15dafa@o447951.ingest.sentry.io/5650507",

@@ -8,4 +8,5 @@ crash-handler = "0.3.1"
 dirs-next = "2"
 minidumper = "0.3.1"
 sentry = {git = "https://github.com/getsentry/sentry-rust.git"}
+thiserror = "1"
 uuid = {version = "1", features = ["v4"]}
