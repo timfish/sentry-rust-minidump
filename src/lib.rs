@@ -1,7 +1,7 @@
 mod client;
 mod server;
 
-const SERVER_ARG: &str = "--start-crash-reporter-server";
+const CRASH_REPORTER_ARG: &str = "--start-crash-reporter-server";
 
 fn get_release_fallback() -> String {
     std::env::current_exe()
@@ -12,7 +12,7 @@ fn get_release_fallback() -> String {
         .to_string()
 }
 
-pub fn socket_from_release(release: &str) -> String {
+pub(crate) fn socket_from_release(release: &str) -> String {
     release
         .chars()
         .map(|c| if c.is_ascii_alphanumeric() { c } else { '-' })
@@ -28,7 +28,7 @@ pub fn init<Release, SentryInitFn, RunAppFn>(
     SentryInitFn: FnOnce(bool) -> sentry::ClientInitGuard,
     RunAppFn: FnOnce(),
 {
-    let is_crash_reporter = std::env::args().any(|a| a == SERVER_ARG);
+    let is_crash_reporter = std::env::args().any(|a| a == CRASH_REPORTER_ARG);
     let _sentry_guard = init_sentry(is_crash_reporter);
     let release = release
         .map(|r| r.into())

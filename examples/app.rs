@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 fn main() {
     sentry_rust_minidump::init(
         sentry::release_name!(),
@@ -16,7 +14,7 @@ fn main() {
         },
         || {
             // This code only runs in the main app process
-            std::thread::sleep(Duration::from_secs(2));
+            std::thread::sleep(std::time::Duration::from_secs(2));
 
             #[allow(deref_nullptr)]
             unsafe {
