@@ -2,7 +2,7 @@ use crate::socket_from_release;
 use minidumper::{LoopAction, MinidumpBinary, Server, ServerHandler};
 use sentry::{
     protocol::{Attachment, AttachmentType, Event, Value},
-    Level,
+    Level, ScopeUpdate,
 };
 use std::{
     fs::{self, File},
@@ -82,8 +82,28 @@ impl ServerHandler for Handler {
         LoopAction::Exit
     }
 
-    fn on_message(&self, _kind: u32, _buffer: Vec<u8>) {
-        //
+    fn on_message(&self, kind: u32, buffer: Vec<u8>) {
+        if let 1 = kind {
+            let update: ScopeUpdate =
+                bincode::deserialize(&buffer[..]).expect("should be valid bincode");
+
+            match update {
+                ScopeUpdate::AddBreadcrumb(b) => sentry::add_breadcrumb(b),
+                ScopeUpdate::ClearBreadcrumbs => {
+                    sentry::configure_scope(|scope| scope.clear_breadcrumbs())
+                }
+                ScopeUpdate::User(user) => sentry::configure_scope(|scope| scope.set_user(user)),
+                ScopeUpdate::SetExtra(k, v) => {
+                    sentry::configure_scope(|scope| scope.set_extra(&k, v))
+                }
+                ScopeUpdate::RemoveExtra(k) => {
+                    sentry::configure_scope(|scope| scope.remove_extra(&k))
+                }
+                ScopeUpdate::SetTag(k, v) => sentry::configure_scope(|scope| scope.set_tag(&k, v)),
+                ScopeUpdate::RemoveTag(k) => sentry::configure_scope(|scope| scope.remove_tag(&k)),
+                _ => todo!(),
+            }
+        }
     }
 }
 

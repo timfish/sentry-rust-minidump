@@ -3,6 +3,7 @@ use crash_handler::{make_crash_event, CrashContext, CrashEventResult, CrashHandl
 use std::{
     fmt::Debug,
     process::{Child, Command},
+    sync::Arc,
     time::Duration,
 };
 
@@ -26,8 +27,21 @@ pub fn start(release: &str) -> Result<(Child, CrashHandler), ClientStartError> {
     let mut wait_time = 0;
 
     loop {
-        match minidumper::Client::with_name(&socket_name) {
+        match minidumper::Client::with_name(&socket_name).map(Arc::new) {
             Ok(client) => {
+                let cloned_client = client.clone();
+
+                sentry::configure_scope(|scope| {
+                    scope.add_scope_listener(move |update| {
+                        let encoded: Vec<u8> =
+                            bincode::serialize(update).expect("should be able to serialise");
+
+                        cloned_client
+                            .send_message(1, &encoded)
+                            .expect("IPC should work without fail no?");
+                    })
+                });
+
                 #[allow(unsafe_code)]
                 match CrashHandler::attach(unsafe {
                     make_crash_event(move |crash_context: &CrashContext| {
