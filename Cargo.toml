@@ -1,12 +1,15 @@
 [package]
 edition = "2021"
+license = "MIT OR Apache-2.0"
 name = "sentry-rust-minidump"
+readme = "README.md"
+repository = "https://github.com/timfish/sentry-rust-minidump"
 version = "0.1.0"
 
 [dependencies]
-crash-handler = "0.3.1"
+crash-handler = "0.3"
 dirs-next = "2"
-minidumper = "0.3.1"
-sentry = {git = "https://github.com/getsentry/sentry-rust.git"}
+minidumper = "0.3"
+sentry = "0.27"
 thiserror = "1"
 uuid = {version = "1", features = ["v4"]}
