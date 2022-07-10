@@ -1,7 +1,7 @@
 use crate::socket_from_release;
 use minidumper::{LoopAction, MinidumpBinary, Server, ServerHandler};
 use sentry::{
-    protocol::{Attachment, AttachmentType, Event, Value},
+    protocol::{Attachment, Event, Value},
     Level,
 };
 use std::{
@@ -12,21 +12,18 @@ use std::{
 };
 use uuid::Uuid;
 
-fn attachment_from_minidump(minidump: MinidumpBinary) -> (Attachment, PathBuf) {
-    (
-        Attachment {
-            filename: minidump
-                .path
-                .file_name()
-                .expect("minidump should have filename")
-                .to_string_lossy()
-                .to_string(),
-            ty: Some(AttachmentType::Minidump),
-            buffer: minidump.contents.expect("minidump should have contents"),
-            content_type: None,
-        },
-        minidump.path,
-    )
+fn attachment_from_minidump(minidump: MinidumpBinary) -> (Option<Attachment>, PathBuf) {
+    let attachment = minidump.contents.and_then(|buffer| {
+        minidump.path.file_name().map(|name| -> Attachment {
+            Attachment {
+                buffer,
+                filename: name.to_string_lossy().to_string(),
+                ..Default::default()
+            }
+        })
+    });
+
+    (attachment, minidump.path)
 }
 
 struct Handler {
@@ -56,20 +53,22 @@ impl ServerHandler for Handler {
             Ok(minidump) => {
                 let (attachment, path) = attachment_from_minidump(minidump);
 
-                sentry::with_scope(
-                    |scope| {
-                        // Remove event.process because this event came from the
-                        // main app process
-                        scope.remove_extra("event.process");
-                        scope.add_attachment(attachment);
-                    },
-                    || {
-                        sentry::capture_event(Event {
-                            level: Level::Fatal,
-                            ..Default::default()
-                        })
-                    },
-                );
+                if let Some(attachment) = attachment {
+                    sentry::with_scope(
+                        |scope| {
+                            // Remove event.process because this event came from the
+                            // main app process
+                            scope.remove_extra("event.process");
+                            scope.add_attachment(attachment);
+                        },
+                        || {
+                            sentry::capture_event(Event {
+                                level: Level::Fatal,
+                                ..Default::default()
+                            })
+                        },
+                    );
+                }
 
                 let _ = fs::remove_file(path);
             }
@@ -87,11 +86,8 @@ impl ServerHandler for Handler {
     }
 }
 
-pub fn get_app_crashes_dir(release: &str) -> PathBuf {
-    dirs_next::data_local_dir()
-        .expect("Could not find local data directory")
-        .join(release)
-        .join("Crashes")
+pub fn get_app_crashes_dir(release: &str) -> Option<PathBuf> {
+    dirs_next::data_local_dir().map(|p| p.join(release).join("Crashes"))
 }
 
 pub fn start(release: &str) {
@@ -102,12 +98,13 @@ pub fn start(release: &str) {
     });
 
     let socket_name = socket_from_release(release);
-    let mut server = Server::with_name(&socket_name).expect("failed to create server");
 
-    let handler = Handler::new(get_app_crashes_dir(release));
-    let shutdown = AtomicBool::new(false);
+    if let Some(crashes_dir) = get_app_crashes_dir(release) {
+        if let Ok(mut server) = Server::with_name(&socket_name) {
+            let handler = Handler::new(crashes_dir);
+            let shutdown = AtomicBool::new(false);
 
-    server
-        .run(Box::new(handler), &shutdown)
-        .expect("failed to run server");
+            let _ = server.run(Box::new(handler), &shutdown);
+        }
+    }
 }
