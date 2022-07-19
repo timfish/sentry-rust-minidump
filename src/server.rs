@@ -84,6 +84,11 @@ impl ServerHandler for Handler {
     fn on_message(&self, _kind: u32, _buffer: Vec<u8>) {
         //
     }
+
+    fn on_client_disconnected(&self, _num_clients: usize) -> minidumper::LoopAction {
+        // We only ever have 1 client, when it disconnects we're done
+        minidumper::LoopAction::Exit
+    }
 }
 
 pub fn get_app_crashes_dir(release: &str) -> Option<PathBuf> {
