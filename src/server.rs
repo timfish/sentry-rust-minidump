@@ -9,6 +9,7 @@ use std::{
     io,
     path::PathBuf,
     sync::atomic::AtomicBool,
+    time::Duration,
 };
 use uuid::Uuid;
 
@@ -109,7 +110,7 @@ pub fn start(release: &str) {
             let handler = Handler::new(crashes_dir);
             let shutdown = AtomicBool::new(false);
 
-            let _ = server.run(Box::new(handler), &shutdown);
+            let _ = server.run(Box::new(handler), &shutdown, Some(Duration::from_secs(5)));
         }
     }
 }
