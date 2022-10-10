@@ -18,33 +18,33 @@ pub(crate) fn socket_from_release(release: &str) -> String {
         .collect()
 }
 
-pub fn init<Release, SentryInitFn, RunAppFn>(
-    release: Option<Release>,
-    init_sentry: SentryInitFn,
-    run_app: RunAppFn,
-) where
-    Release: Into<String>,
-    SentryInitFn: FnOnce(bool) -> sentry::ClientInitGuard,
-    RunAppFn: FnOnce(),
-{
-    let is_crash_reporter = std::env::args().any(|a| a == CRASH_REPORTER_ARG);
-    let _sentry_guard = init_sentry(is_crash_reporter);
+pub fn is_crash_reporter_process() -> bool {
+    std::env::args().any(|arg| arg == CRASH_REPORTER_ARG)
+}
 
-    let release: Option<String> = release.map(|r| r.into()).or_else(get_release_fallback);
+#[must_use = "The return value of init should not be dropped until the program exits"]
+pub fn init(client: &sentry::Client) -> Option<client::ClientHandle> {
+    let release = client
+        .options()
+        .release
+        .as_ref()
+        .map(|r| r.to_string())
+        .or_else(get_release_fallback)
+        .expect("A release must be set in sentry::ClientOptions");
 
-    if is_crash_reporter {
-        if let Some(release) = release {
-            server::start(&release);
-        }
+    if is_crash_reporter_process() {
+        server::start(&release);
+        client.flush(Some(std::time::Duration::from_secs(5)));
+        // We have to force exit so that the app code after here does not run in
+        // the crash reporter process.
+        std::process::exit(0);
     } else {
-        if let Some(release) = release {
-            let handler = client::start(&release);
-
-            if let Err(e) = handler {
+        match client::start(&release) {
+            Ok(handler) => Some(handler),
+            Err(e) => {
                 sentry::capture_error(&e);
+                None
             }
         }
-
-        run_app()
     }
 }

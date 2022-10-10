@@ -16,7 +16,9 @@ pub enum ClientStartError {
     StartIpc(#[from] minidumper::Error),
 }
 
-pub fn start(release: &str) -> Result<(Child, CrashHandler), ClientStartError> {
+pub struct ClientHandle(Child, CrashHandler);
+
+pub fn start(release: &str) -> Result<ClientHandle, ClientStartError> {
     let socket_name = socket_from_release(release);
 
     let server_process = Command::new(std::env::current_exe()?)
@@ -34,7 +36,7 @@ pub fn start(release: &str) -> Result<(Child, CrashHandler), ClientStartError> {
                         CrashEventResult::Handled(client.request_dump(crash_context).is_ok())
                     })
                 }) {
-                    Ok(crash_handler) => return Ok((server_process, crash_handler)),
+                    Ok(crash_handler) => return Ok(ClientHandle(server_process, crash_handler)),
                     Err(e) => return Err(e.into()),
                 }
             }

@@ -1,7 +1,7 @@
 use crate::socket_from_release;
 use minidumper::{LoopAction, MinidumpBinary, Server, ServerHandler};
 use sentry::{
-    protocol::{Attachment, Event, Value},
+    protocol::{Attachment, AttachmentType, Event, Value},
     Level,
 };
 use std::{
@@ -19,6 +19,7 @@ fn attachment_from_minidump(minidump: MinidumpBinary) -> (Option<Attachment>, Pa
             Attachment {
                 buffer,
                 filename: name.to_string_lossy().to_string(),
+                ty: Some(AttachmentType::Minidump),
                 ..Default::default()
             }
         })

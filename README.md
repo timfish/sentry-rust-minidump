@@ -20,28 +20,21 @@ sentry-rust-minidump = "0.1"
 
 ```rust
 fn main() {
-    sentry_rust_minidump::init(
-        sentry::release_name!(),
-        |is_crash_reporter_process| {
-            // This code will be run early in both processes to setup sentry
-            sentry::init((
-                "__DSN__",
-                sentry::ClientOptions {
-                    release: sentry::release_name!(),
-                    ..Default::default()
-                },
-            )) // You must return the guard!
-        },
-        || {
-            // Run your app or whatever you were planning to do...
-            app::run();
+    let client = sentry::init(("__DSN__", sentry::ClientOptions {
+        release: sentry::release_name!(),
+        debug: true,
+        ..Default::default()
+    }));
 
-            // This will cause a minidump to be sent to Sentry
-            unsafe {
-                *std::ptr::null_mut() = true;
-            }
-        },
-    );
+    // Everything before here runs in both app and crash reporter processes
+    let _guard = sentry_rust_minidump::init(&client);
+    // Everything after here runs in only the app process
+
+    std::thread::sleep(std::time::Duration::from_secs(2));
+
+    #[allow(deref_nullptr)]
+    unsafe {
+        *std::ptr::null_mut() = true;
+    }
 }
-
 ```
