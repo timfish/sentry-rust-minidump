@@ -1,10 +1,11 @@
-use crate::{socket_from_release, CRASH_REPORTER_ARG};
+use crate::CRASH_REPORTER_ARG;
 use crash_handler::{make_crash_event, CrashContext, CrashEventResult, CrashHandler};
 use std::{
     fmt::Debug,
     process::{Child, Command},
     time::Duration,
 };
+use uuid::Uuid;
 
 #[derive(thiserror::Error, Debug)]
 pub enum ClientStartError {
@@ -19,10 +20,21 @@ pub enum ClientStartError {
 pub struct ClientHandle(Child, CrashHandler);
 
 pub fn start(release: &str) -> Result<ClientHandle, ClientStartError> {
-    let socket_name = socket_from_release(release);
+    // We add a uuid at the end of the release so multiple instances of the
+    // same app can each have a crash reporter process
+    let socket_name = format!(
+        "{}-{}",
+        release
+            .chars()
+            .map(|c| if c.is_ascii_alphanumeric() { c } else { '-' })
+            .collect::<String>(),
+        Uuid::new_v4()
+    );
+
+    let server_arg = format!("{}={}", CRASH_REPORTER_ARG, socket_name);
 
     let server_process = Command::new(std::env::current_exe()?)
-        .arg(CRASH_REPORTER_ARG)
+        .arg(server_arg)
         .spawn()?;
 
     let mut wait_time = 0;

@@ -1,4 +1,3 @@
-use crate::socket_from_release;
 use minidumper::{LoopAction, MinidumpBinary, Server, ServerHandler};
 use sentry::{
     protocol::{Attachment, AttachmentType, Event, Value},
@@ -88,26 +87,23 @@ impl ServerHandler for Handler {
     }
 
     fn on_client_disconnected(&self, _num_clients: usize) -> minidumper::LoopAction {
-        // We only ever have 1 client, when it disconnects we're done
-        minidumper::LoopAction::Exit
+        LoopAction::Exit
     }
 }
 
-pub fn get_app_crashes_dir(release: &str) -> Option<PathBuf> {
+fn get_app_crashes_dir(release: &str) -> Option<PathBuf> {
     dirs_next::data_local_dir().map(|p| p.join(release).join("Crashes"))
 }
 
-pub fn start(release: &str) {
+pub fn start(release: &str, socket_name: &str) {
     // Set the event.origin so that it's obvious when events come from the crash
     // reporter process rather than the main app process
     sentry::configure_scope(|scope| {
         scope.set_extra("event.process", Value::String("crash-reporter".to_string()));
     });
 
-    let socket_name = socket_from_release(release);
-
     if let Some(crashes_dir) = get_app_crashes_dir(release) {
-        if let Ok(mut server) = Server::with_name(&socket_name) {
+        if let Ok(mut server) = Server::with_name(socket_name) {
             let handler = Handler::new(crashes_dir);
             let shutdown = AtomicBool::new(false);
 
