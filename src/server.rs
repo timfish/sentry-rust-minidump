@@ -1,7 +1,6 @@
-use crate::socket_from_release;
 use minidumper::{LoopAction, MinidumpBinary, Server, ServerHandler};
 use sentry::{
-    protocol::{Attachment, Event, Value},
+    protocol::{Attachment, AttachmentType, Event, Value},
     Level,
 };
 use std::{
@@ -13,12 +12,15 @@ use std::{
 };
 use uuid::Uuid;
 
+use crate::CRASH_REPORTER_ARG;
+
 fn attachment_from_minidump(minidump: MinidumpBinary) -> (Option<Attachment>, PathBuf) {
     let attachment = minidump.contents.and_then(|buffer| {
         minidump.path.file_name().map(|name| -> Attachment {
             Attachment {
                 buffer,
                 filename: name.to_string_lossy().to_string(),
+                ty: Some(AttachmentType::Minidump),
                 ..Default::default()
             }
         })
@@ -87,12 +89,11 @@ impl ServerHandler for Handler {
     }
 
     fn on_client_disconnected(&self, _num_clients: usize) -> minidumper::LoopAction {
-        // We only ever have 1 client, when it disconnects we're done
-        minidumper::LoopAction::Exit
+        LoopAction::Exit
     }
 }
 
-pub fn get_app_crashes_dir(release: &str) -> Option<PathBuf> {
+fn get_app_crashes_dir(release: &str) -> Option<PathBuf> {
     dirs_next::data_local_dir().map(|p| p.join(release).join("Crashes"))
 }
 
@@ -103,7 +104,10 @@ pub fn start(release: &str) {
         scope.set_extra("event.process", Value::String("crash-reporter".to_string()));
     });
 
-    let socket_name = socket_from_release(release);
+    let socket_name = std::env::args()
+        .find(|arg| arg.starts_with(CRASH_REPORTER_ARG))
+        .and_then(|arg| arg.split('=').last().map(|arg| arg.to_string()))
+        .expect("Server should only be started when the crash reporter arg is present");
 
     if let Some(crashes_dir) = get_app_crashes_dir(release) {
         if let Ok(mut server) = Server::with_name(&socket_name) {
