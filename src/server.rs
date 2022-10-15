@@ -12,6 +12,8 @@ use std::{
 };
 use uuid::Uuid;
 
+use crate::CRASH_REPORTER_ARG;
+
 fn attachment_from_minidump(minidump: MinidumpBinary) -> (Option<Attachment>, PathBuf) {
     let attachment = minidump.contents.and_then(|buffer| {
         minidump.path.file_name().map(|name| -> Attachment {
@@ -95,15 +97,20 @@ fn get_app_crashes_dir(release: &str) -> Option<PathBuf> {
     dirs_next::data_local_dir().map(|p| p.join(release).join("Crashes"))
 }
 
-pub fn start(release: &str, socket_name: &str) {
+pub fn start(release: &str) {
     // Set the event.origin so that it's obvious when events come from the crash
     // reporter process rather than the main app process
     sentry::configure_scope(|scope| {
         scope.set_extra("event.process", Value::String("crash-reporter".to_string()));
     });
 
+    let socket_name = std::env::args()
+        .find(|arg| arg.starts_with(CRASH_REPORTER_ARG))
+        .and_then(|arg| arg.split('=').last().map(|arg| arg.to_string()))
+        .expect("Server should only be started when the crash reporter arg is present");
+
     if let Some(crashes_dir) = get_app_crashes_dir(release) {
-        if let Ok(mut server) = Server::with_name(socket_name) {
+        if let Ok(mut server) = Server::with_name(&socket_name) {
             let handler = Handler::new(crashes_dir);
             let shutdown = AtomicBool::new(false);
 

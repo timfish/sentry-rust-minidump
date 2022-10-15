@@ -16,14 +16,13 @@ your application code.
 ```toml
 [dependencies]
 sentry = "0.27"
-sentry-rust-minidump = "0.1"
+sentry-rust-minidump = "0.2"
 ```
 
 ```rust
 fn main() {
     let client = sentry::init(("__DSN__", sentry::ClientOptions {
         release: sentry::release_name!(),
-        debug: true,
         ..Default::default()
     }));
 
