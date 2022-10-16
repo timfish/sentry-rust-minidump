@@ -3,6 +3,7 @@ use crash_handler::{make_crash_event, CrashContext, CrashEventResult, CrashHandl
 use std::{
     fmt::Debug,
     process::{Child, Command},
+    sync::Arc,
     time::Duration,
 };
 use uuid::Uuid;
@@ -40,9 +41,19 @@ pub fn start(release: &str) -> Result<ClientHandle, ClientStartError> {
     let mut wait_time = 0;
 
     loop {
-        match minidumper::Client::with_name(&socket_name) {
+        match minidumper::Client::with_name(&socket_name).map(Arc::new) {
             Ok(client) => {
-                #[allow(unsafe_code)]
+                std::thread::spawn({
+                    let client = client.clone();
+                    move || loop {
+                        std::thread::sleep(Duration::from_secs(3));
+
+                        if client.ping().is_err() {
+                            break;
+                        }
+                    }
+                });
+
                 match CrashHandler::attach(unsafe {
                     make_crash_event(move |crash_context: &CrashContext| {
                         CrashEventResult::Handled(client.request_dump(crash_context).is_ok())

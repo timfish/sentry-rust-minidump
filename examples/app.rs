@@ -12,7 +12,7 @@ fn main() {
     let _guard = sentry_rust_minidump::init(&client);
     // Everything after here runs in only the app process
 
-    std::thread::sleep(std::time::Duration::from_secs(2));
+    std::thread::sleep(std::time::Duration::from_secs(10));
 
     #[allow(deref_nullptr)]
     unsafe {
