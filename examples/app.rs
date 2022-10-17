@@ -1,9 +1,8 @@
 fn main() {
     let client = sentry::init((
-        "https://233a45e5efe34c47a3536797ce15dafa@o447951.ingest.sentry.io/5650507",
+        "http://abc123@127.0.0.1:8080/12345",
         sentry::ClientOptions {
             release: sentry::release_name!(),
-            debug: true,
             ..Default::default()
         },
     ));

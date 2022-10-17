@@ -1,3 +1,4 @@
+use crate::constants::*;
 use minidumper::{LoopAction, MinidumpBinary, Server, ServerHandler};
 use sentry::{
     protocol::{Attachment, AttachmentType, Event, Value},
@@ -10,24 +11,6 @@ use std::{
     sync::atomic::AtomicBool,
     time::Duration,
 };
-use uuid::Uuid;
-
-use crate::CRASH_REPORTER_ARG;
-
-fn attachment_from_minidump(minidump: MinidumpBinary) -> (Option<Attachment>, PathBuf) {
-    let attachment = minidump.contents.and_then(|buffer| {
-        minidump.path.file_name().map(|name| -> Attachment {
-            Attachment {
-                buffer,
-                filename: name.to_string_lossy().to_string(),
-                ty: Some(AttachmentType::Minidump),
-                ..Default::default()
-            }
-        })
-    });
-
-    (attachment, minidump.path)
-}
 
 struct Handler {
     crashes_dir: PathBuf,
@@ -44,7 +27,7 @@ impl ServerHandler for Handler {
     /// created to store it.
     fn create_minidump_file(&self) -> Result<(File, PathBuf), io::Error> {
         fs::create_dir_all(&self.crashes_dir)?;
-        let file_name = format!("{}.dmp", Uuid::new_v4());
+        let file_name = format!("{}.dmp", uuid::Uuid::new_v4());
         let path = self.crashes_dir.join(file_name);
         Ok((File::create(&path)?, path))
     }
@@ -54,7 +37,16 @@ impl ServerHandler for Handler {
     fn on_minidump_created(&self, result: Result<MinidumpBinary, minidumper::Error>) -> LoopAction {
         match result {
             Ok(minidump) => {
-                let (attachment, path) = attachment_from_minidump(minidump);
+                let attachment = minidump.contents.and_then(|buffer| {
+                    minidump.path.file_name().map(|name| -> Attachment {
+                        Attachment {
+                            buffer,
+                            filename: name.to_string_lossy().to_string(),
+                            ty: Some(AttachmentType::Minidump),
+                            ..Default::default()
+                        }
+                    })
+                });
 
                 if let Some(attachment) = attachment {
                     sentry::with_scope(
@@ -73,7 +65,7 @@ impl ServerHandler for Handler {
                     );
                 }
 
-                let _ = fs::remove_file(path);
+                fs::remove_file(minidump.path).ok();
             }
             Err(e) => {
                 sentry::capture_error(&e);
@@ -114,7 +106,11 @@ pub fn start(release: &str) {
             let handler = Handler::new(crashes_dir);
             let shutdown = AtomicBool::new(false);
 
-            let _ = server.run(Box::new(handler), &shutdown, Some(Duration::from_secs(5)));
+            let _ = server.run(
+                Box::new(handler),
+                &shutdown,
+                Some(Duration::from_millis(SERVER_STALE_TIMEOUT)),
+            );
         }
     }
 }

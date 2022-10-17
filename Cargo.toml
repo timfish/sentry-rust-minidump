@@ -14,3 +14,8 @@ minidumper = "0.5"
 sentry = "0.27"
 thiserror = "1"
 uuid = {version = "1", features = ["v4"]}
+
+[dev-dependencies]
+actix-rt = "2.7"
+actix-web = "4"
+crossbeam-channel = "0.5"

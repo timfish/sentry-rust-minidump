@@ -1,10 +1,16 @@
 mod client;
 mod server;
 
-const CRASH_REPORTER_ARG: &str = "--crash-reporter-server";
+mod constants {
+    pub const CRASH_REPORTER_ARG: &str = "--crash-reporter-server";
+    pub const SERVER_STALE_TIMEOUT: u64 = 5000;
+    pub const CLIENT_CONNECT_RETRY: u64 = 50;
+    pub const CLIENT_CONNECT_TIMEOUT: u64 = 3000;
+    pub const CLIENT_SERVER_POLL: u64 = SERVER_STALE_TIMEOUT / 2;
+}
 
 pub fn is_crash_reporter_process() -> bool {
-    std::env::args().any(|arg| arg.starts_with(CRASH_REPORTER_ARG))
+    std::env::args().any(|arg| arg.starts_with(constants::CRASH_REPORTER_ARG))
 }
 
 #[must_use = "The return value of init should not be dropped until the program exits"]
