@@ -3,6 +3,7 @@ fn main() {
         "http://abc123@127.0.0.1:8080/12345",
         sentry::ClientOptions {
             release: sentry::release_name!(),
+            debug: true,
             ..Default::default()
         },
     ));

@@ -17,9 +17,11 @@ async fn envelope(
     req_body: Bytes,
     state: web::Data<AppState>,
 ) -> impl Responder {
+    let envelope = Envelope::from_slice(&req_body).expect("invalid envelope");
+    println!("{:#?}", envelope);
     state
         .envelope_tx
-        .send(Envelope::from_slice(&req_body).expect("invalid envelope"))
+        .send(envelope)
         .expect("could not send envelope");
 
     HttpResponse::Ok()
