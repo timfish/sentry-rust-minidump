@@ -6,7 +6,7 @@ use sentry::{
 };
 use std::{
     fs::{self, File},
-    io,
+    io::{self, Read, Write},
     path::PathBuf,
     sync::atomic::AtomicBool,
     time::Duration,
@@ -36,17 +36,29 @@ impl ServerHandler for Handler {
     /// file. Also returns the full heap buffer as well.
     fn on_minidump_created(&self, result: Result<MinidumpBinary, minidumper::Error>) -> LoopAction {
         match result {
-            Ok(minidump) => {
-                let attachment = minidump.contents.and_then(|buffer| {
-                    minidump.path.file_name().map(|name| -> Attachment {
-                        Attachment {
-                            buffer,
-                            filename: name.to_string_lossy().to_string(),
-                            ty: Some(AttachmentType::Minidump),
-                            ..Default::default()
-                        }
+            Ok(mut minidump) => {
+                let attachment = minidump
+                    .contents
+                    .or_else(|| {
+                        minidump.file.flush().ok();
+
+                        let mut buf = Vec::new();
+                        File::open(&minidump.path)
+                            .unwrap()
+                            .read_to_end(&mut buf)
+                            .map(|_| buf)
+                            .ok()
                     })
-                });
+                    .and_then(|buffer| {
+                        minidump.path.file_name().map(|name| -> Attachment {
+                            Attachment {
+                                buffer,
+                                filename: name.to_string_lossy().to_string(),
+                                ty: Some(AttachmentType::Minidump),
+                                ..Default::default()
+                            }
+                        })
+                    });
 
                 if let Some(attachment) = attachment {
                     sentry::with_scope(
