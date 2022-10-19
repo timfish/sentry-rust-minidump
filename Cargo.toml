@@ -18,4 +18,4 @@ uuid = {version = "1", features = ["v4"]}
 [dev-dependencies]
 actix-rt = "2.7"
 sadness-generator = "0.4"
-sentry-test-server = {git = "https://github.com/timfish/sentry-test-server.git"}
+sentry-test-server = {git = "https://github.com/timfish/sentry-test-server.git", rev = "f6bd54c"}

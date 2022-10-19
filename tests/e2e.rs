@@ -15,6 +15,10 @@ async fn test_example_app() -> Result<(), Box<dyn std::error::Error>> {
 
     let env = envelope_rx.recv_timeout(Duration::from_secs(2))?;
 
+    if let Ok(json) = sentry_test_server::to_json_pretty(&env) {
+        println!("{}", json);
+    }
+
     let item = env
         .items()
         .find(|item| matches!(item, sentry::protocol::EnvelopeItem::Attachment(_)))
