@@ -40,14 +40,14 @@ impl ServerHandler for Handler {
                 let attachment = minidump
                     .contents
                     .or_else(|| {
-                        minidump.file.flush().ok();
-
-                        let mut buf = Vec::new();
-                        File::open(&minidump.path)
-                            .unwrap()
-                            .read_to_end(&mut buf)
-                            .map(|_| buf)
-                            .ok()
+                        minidump.file.flush().ok().and_then(|_| {
+                            let mut buf = Vec::new();
+                            File::open(&minidump.path)
+                                .unwrap()
+                                .read_to_end(&mut buf)
+                                .map(|_| buf)
+                                .ok()
+                        })
                     })
                     .and_then(|buffer| {
                         minidump.path.file_name().map(|name| -> Attachment {

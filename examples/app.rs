@@ -14,8 +14,5 @@ fn main() {
 
     std::thread::sleep(std::time::Duration::from_secs(10));
 
-    #[allow(deref_nullptr)]
-    unsafe {
-        *std::ptr::null_mut() = true;
-    }
+    unsafe { sadness_generator::raise_illegal_instruction() };
 }

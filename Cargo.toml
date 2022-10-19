@@ -17,5 +17,5 @@ uuid = {version = "1", features = ["v4"]}
 
 [dev-dependencies]
 actix-rt = "2.7"
-actix-web = "4"
-crossbeam-channel = "0.5"
+sadness-generator = "0.4"
+sentry-test-server = {git = "https://github.com/timfish/sentry-test-server.git"}
