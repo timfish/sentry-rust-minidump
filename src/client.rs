@@ -32,6 +32,19 @@ pub fn start(release: &str) -> Result<ClientHandle, ClientStartError> {
         .arg(server_arg)
         .spawn()?;
 
+    // When ptrace_scope is set to 1, the crash reporter process cannot attach
+    // https://www.kernel.org/doc/Documentation/security/Yama.txt
+    #[cfg(target_os = "linux")]
+    unsafe {
+        libc::prctl(
+            libc::PR_SET_PTRACER,
+            server_process.id() as libc::c_ulong,
+            0,
+            0,
+            0,
+        );
+    }
+
     let mut wait_time = 0;
 
     let client = loop {
