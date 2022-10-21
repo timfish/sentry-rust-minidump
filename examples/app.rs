@@ -1,6 +1,6 @@
 fn main() {
     let client = sentry::init((
-        "https://233a45e5efe34c47a3536797ce15dafa@o447951.ingest.sentry.io/5650507",
+        "http://abc123@127.0.0.1:8080/12345",
         sentry::ClientOptions {
             release: sentry::release_name!(),
             debug: true,
@@ -14,8 +14,5 @@ fn main() {
 
     std::thread::sleep(std::time::Duration::from_secs(10));
 
-    #[allow(deref_nullptr)]
-    unsafe {
-        *std::ptr::null_mut() = true;
-    }
+    unsafe { sadness_generator::raise_illegal_instruction() };
 }

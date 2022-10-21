@@ -5,7 +5,7 @@ license = "MIT OR Apache-2.0"
 name = "sentry-rust-minidump"
 readme = "README.md"
 repository = "https://github.com/timfish/sentry-rust-minidump"
-version = "0.2.1"
+version = "0.2.2"
 
 [dependencies]
 crash-handler = "0.3"
@@ -14,3 +14,11 @@ minidumper = "0.5"
 sentry = "0.27"
 thiserror = "1"
 uuid = {version = "1", features = ["v4"]}
+
+[target.'cfg(target_os = "linux")'.dependencies]
+libc = "0.2"
+
+[dev-dependencies]
+actix-rt = "2.7"
+sadness-generator = "0.4"
+sentry-test-server = {git = "https://github.com/timfish/sentry-test-server.git", rev = "f6bd54c"}
