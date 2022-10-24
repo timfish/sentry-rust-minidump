@@ -1,9 +1,9 @@
-use sentry::protocol::AttachmentType;
-use std::{process::Command, time::Duration};
+use sentry::protocol::{AttachmentType, EnvelopeItem};
+use std::{error::Error, process::Command, time::Duration};
 
 #[actix_rt::test]
-async fn test_example_app() -> Result<(), Box<dyn std::error::Error>> {
-    let envelope_rx = sentry_test_server::server(("127.0.0.1", 8080))?;
+async fn test_example_app() -> Result<(), Box<dyn Error>> {
+    let envelope_rx = sentry_test_server::server(("127.0.0.1", 8123))?;
 
     // We need to await at some point otherwise the server doesn't seem to start
     actix_rt::time::sleep(Duration::from_secs(1)).await;
@@ -21,18 +21,18 @@ async fn test_example_app() -> Result<(), Box<dyn std::error::Error>> {
 
     let item = env
         .items()
-        .find(|item| matches!(item, sentry::protocol::EnvelopeItem::Attachment(_)))
+        .find(|item| matches!(item, EnvelopeItem::Attachment(_)))
         .expect("envelope should have an attachment");
 
     let attachment = match item {
-        sentry::protocol::EnvelopeItem::Attachment(attachment) => attachment,
+        EnvelopeItem::Attachment(attachment) => attachment,
         _ => unreachable!("envelope should have an attachment"),
     };
 
     assert!(attachment.filename.ends_with(".dmp"));
     assert_eq!(attachment.ty, Some(AttachmentType::Minidump));
     assert!(attachment.buffer.len() > 10_000);
-    assert!(String::from_utf8_lossy(&attachment.buffer).starts_with("MDMP"));
+    assert!(String::from_utf8_lossy(&attachment.buffer[..20]).starts_with("MDMP"));
 
     Ok(())
 }

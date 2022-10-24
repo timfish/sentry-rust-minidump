@@ -1,6 +1,6 @@
 fn main() {
     let client = sentry::init((
-        "http://abc123@127.0.0.1:8080/12345",
+        "http://abc123@127.0.0.1:8123/12345",
         sentry::ClientOptions {
             release: sentry::release_name!(),
             debug: true,

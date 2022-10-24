@@ -8,15 +8,9 @@ repository = "https://github.com/timfish/sentry-rust-minidump"
 version = "0.2.2"
 
 [dependencies]
-crash-handler = "0.3"
-dirs-next = "2"
-minidumper = "0.5"
+minidumper-child = "0.1"
 sentry = "0.27"
 thiserror = "1"
-uuid = {version = "1", features = ["v4"]}
-
-[target.'cfg(target_os = "linux")'.dependencies]
-libc = "0.2"
 
 [dev-dependencies]
 actix-rt = "2.7"
