@@ -1,38 +1,51 @@
-mod client;
-mod server;
+use minidumper_child::{ClientHandle, Error, MinidumperChild};
+use sentry::{
+    protocol::{Attachment, AttachmentType, Event, Value},
+    Level,
+};
 
-mod constants {
-    pub const CRASH_REPORTER_ARG: &str = "--crash-reporter-server";
-    pub const SERVER_STALE_TIMEOUT: u64 = 5000;
-    pub const CLIENT_CONNECT_RETRY: u64 = 50;
-    pub const CLIENT_CONNECT_TIMEOUT: u64 = 3000;
-    pub const CLIENT_SERVER_POLL: u64 = SERVER_STALE_TIMEOUT / 2;
-}
+#[must_use = "The return value from init() should not be dropped until the program exits"]
+pub fn init(sentry_client: &sentry::Client) -> Result<ClientHandle, Error> {
+    let sentry_client = sentry_client.clone();
 
-pub fn is_crash_reporter_process() -> bool {
-    std::env::args().any(|arg| arg.starts_with(constants::CRASH_REPORTER_ARG))
-}
+    let child = MinidumperChild::new().on_minidump(move |buffer, path| {
+        sentry::with_scope(
+            |scope| {
+                // Remove event.process because this event came from the
+                // main app process
+                scope.remove_extra("event.process");
 
-#[must_use = "The return value of init should not be dropped until the program exits"]
-pub fn init(sentry_client: &sentry::Client) -> Option<client::ClientHandle> {
-    let release = sentry_client
-        .options()
-        .release
-        .as_ref()
-        .map(|r| r.to_string())
-        .expect("A release must be set in sentry::ClientOptions");
+                let filename = path
+                    .file_name()
+                    .map(|s| s.to_string_lossy().into_owned())
+                    .unwrap_or_else(|| "minidump.dmp".to_string());
 
-    if is_crash_reporter_process() {
-        server::start(&release);
-        // The server has exited which means the main app process has crashed or
-        // exited.
-        // Because we're going to force-exit, we need to flush to ensure any
-        // events are sent.
+                scope.add_attachment(Attachment {
+                    buffer,
+                    filename,
+                    ty: Some(AttachmentType::Minidump),
+                    ..Default::default()
+                });
+            },
+            || {
+                sentry::capture_event(Event {
+                    level: Level::Fatal,
+                    ..Default::default()
+                })
+            },
+        );
+
+        // We need to flush because the server will exit after this closure returns
         sentry_client.flush(Some(std::time::Duration::from_secs(5)));
-        // We have to force exit so that the app code after here does not run in
-        // the crash reporter process.
-        std::process::exit(0);
-    } else {
-        client::start(&release).ok()
+    });
+
+    if child.is_crash_reporter_process() {
+        // Set the event.origin so that it's obvious when Rust events come from
+        // the crash reporter process rather than the main app process
+        sentry::configure_scope(|scope| {
+            scope.set_extra("event.process", Value::String("crash-reporter".to_string()));
+        });
     }
+
+    child.spawn()
 }

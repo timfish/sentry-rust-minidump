@@ -1,6 +1,6 @@
 # `sentry-rust-minidump` 
 
-![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/timfish/sentry-rust-minidump/Test/master?label=Integration%20Tests&style=for-the-badge)
+![Master branch integration test status](https://img.shields.io/github/workflow/status/timfish/sentry-rust-minidump/Test/master?label=Integration%20Tests&style=for-the-badge)
 
 Experimental code that wraps the `minidumper` and `crash-handler` crates to make it simpler to capture
 and send minidumps from a separate process via Sentry Rust.
