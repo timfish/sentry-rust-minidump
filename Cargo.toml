@@ -9,10 +9,11 @@ version = "0.3.0"
 
 [dependencies]
 minidumper-child = "0.1"
-sentry = "0.28"
+sentry = "0.29.1"
 thiserror = "1"
 
 [dev-dependencies]
 actix-rt = "2.7"
 sadness-generator = "0.4"
-sentry-test-server = {git = "https://github.com/timfish/sentry-test-server.git", rev = "caa6725"}
+sentry-test-server = {git = "https://github.com/timfish/sentry-test-server.git", rev = "emilsivervik:build/update_sentry_version"}
+# Temporary revision while it's being reviewed
