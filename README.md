@@ -1,6 +1,6 @@
 # `sentry-rust-minidump` 
 
-![Master branch integration test status](https://img.shields.io/github/workflow/status/timfish/sentry-rust-minidump/Test/master?label=Integration%20Tests&style=for-the-badge)
+![Master branch integration test status](https://img.shields.io/github/actions/workflow/status/timfish/sentry-rust-minidump/test.yml?label=Integration%20Tests&style=for-the-badge)
 
 Uses the [`minidumper-child`](https://github.com/timfish/minidumper-child) crate
 to capture minidumps from a separate process and sends them to Sentry as
