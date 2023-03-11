@@ -1,8 +1,10 @@
-use minidumper_child::{ClientHandle, Error, MinidumperChild};
+pub use minidumper_child::MinidumperChild;
 use sentry::{
     protocol::{Attachment, AttachmentType, Event, Value},
     Level,
 };
+
+pub use minidumper_child::{ClientHandle, Error};
 
 #[must_use = "The return value from init() should not be dropped until the program exits"]
 pub fn init(sentry_client: &sentry::Client) -> Result<ClientHandle, Error> {
