@@ -4,7 +4,7 @@
 
 Uses the [`minidumper-child`](https://github.com/timfish/minidumper-child) crate
 to capture minidumps from a separate process and sends them to Sentry as
-attachments via the Sentry Rust SKD. 
+attachments via the Sentry Rust SDK. 
 
 `sentry_rust_minidump::init` starts the current executable again with an argument that
 causes it to start in crash reporter mode. In this mode it waits for minidump

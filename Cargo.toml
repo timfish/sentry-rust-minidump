@@ -5,7 +5,7 @@ license = "MIT OR Apache-2.0"
 name = "sentry-rust-minidump"
 readme = "README.md"
 repository = "https://github.com/timfish/sentry-rust-minidump"
-version = "0.6.3"
+version = "0.6.4"
 
 [dependencies]
 minidumper-child = "0.2"
