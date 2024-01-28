@@ -18,7 +18,7 @@ your application code.
 
 ```toml
 [dependencies]
-sentry = "0.31"
+sentry = "0.32"
 sentry-rust-minidump = "0.6"
 ```
 
