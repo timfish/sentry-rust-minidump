@@ -18,8 +18,8 @@ your application code.
 
 ```toml
 [dependencies]
-sentry = "0.31"
-sentry-rust-minidump = "0.6"
+sentry = "0.32"
+sentry-rust-minidump = "0.7"
 ```
 
 ```rust
@@ -37,5 +37,31 @@ fn main() {
     unsafe {
         *std::ptr::null_mut() = true;
     }
+}
+```
+
+## `ipc` feature
+
+By default there is no scope synchronisation from the app process to the crash
+reporter process. This means that native crash event will be missing
+breadcrumbs, user, tags or extra added to the scope in the app.  
+
+When the `ipc` feature is enabled, you can send scope updates to the crash
+reporter process:
+
+```rust
+fn main() {
+    let client = sentry::init("__YOUR_DSN__");
+
+    // Everything before here runs in both app and crash reporter processes
+    let crash_reporter = sentry_rust_minidump::init(&client).expect("crash reported didn't start");
+    // Everything after here runs in only the app process
+
+    crash_reporter.add_breadcrumb(...);
+    crash_reporter.set_user(...);
+    crash_reporter.set_extra(...);
+    crash_reporter.set_tag(...);
+
+    // Don't drop crash_reporter or the reporter process will close!
 }
 ```
