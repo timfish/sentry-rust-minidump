@@ -9,7 +9,7 @@ version = "0.12.0"
 
 [dependencies]
 minidumper-child = "0.2"
-sentry = "0.38"
+sentry = { version = "0.38", default-features = false }
 thiserror = "2"
 serde = { version = "1", features = ["derive"], optional = true }
 serde_json = { version = "1", optional = true }
@@ -17,7 +17,39 @@ serde_json = { version = "1", optional = true }
 [dev-dependencies]
 actix-rt = "2.7"
 sadness-generator = "0.6"
-sentry-test-server = {git = "https://github.com/timfish/sentry-test-server.git", rev = "7cc1db5e"}
+sentry-test-server = { git = "https://github.com/timfish/sentry-test-server.git", rev = "7cc1db5e" }
 
 [features]
+default = ["sentry/default"]
+
+backtrace = ["sentry/backtrace"]
+contexts = ["sentry/contexts"]
+panic = ["sentry/panic"]
+
+# other integrations
+anyhow = ["sentry/anyhow"]
+debug-images = ["sentry/debug-images"]
+log = ["sentry/log"]
+slog = ["sentry/slog"]
+tower = ["sentry/tower"]
+tower-http = ["sentry/tower-http"]
+tower-axum-matched-path = ["sentry/tower-axum-matched-path"]
+tracing = ["sentry/tracing"]
+
+# other features
+test = ["sentry/test"]
+debug-logs = ["sentry/debug-logs"]
+
+# transports
+transport = ["sentry/transport"]
+reqwest = ["sentry/reqwest"]
+curl = ["sentry/curl"]
+ureq = ["sentry/ureq"]
+
+# transport settings
+native-tls = ["sentry/native-tls"]
+rustls = ["sentry/rustls"]
+embedded-svc-http = ["sentry/embedded-svc-http"]
+
+# minidump features
 ipc = ["dep:serde", "dep:serde_json"]
