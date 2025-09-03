@@ -16,7 +16,7 @@ async fn test_example_app() -> Result<(), Box<dyn Error>> {
     let env = envelope_rx.recv_timeout(Duration::from_secs(15))?;
 
     if let Ok(json) = sentry_test_server::to_json_pretty(&env) {
-        println!("{}", json);
+        println!("{json}");
     }
 
     let env_item = env
