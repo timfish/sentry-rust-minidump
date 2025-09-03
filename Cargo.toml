@@ -5,11 +5,11 @@ license = "MIT OR Apache-2.0"
 name = "sentry-rust-minidump"
 readme = "README.md"
 repository = "https://github.com/timfish/sentry-rust-minidump"
-version = "0.12.0"
+version = "0.13.0"
 
 [dependencies]
 minidumper-child = "0.2"
-sentry = "0.38"
+sentry = { version = "*", default-features = false }
 thiserror = "2"
 serde = { version = "1", features = ["derive"], optional = true }
 serde_json = { version = "1", optional = true }
