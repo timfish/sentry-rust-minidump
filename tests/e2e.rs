@@ -9,7 +9,14 @@ async fn test_example_app() -> Result<(), Box<dyn Error>> {
     actix_rt::time::sleep(Duration::from_secs(2)).await;
 
     Command::new("cargo")
-        .args(["run", "--example", "app", "--all-features"])
+        .args([
+            "run",
+            "--example",
+            "app",
+            "--all-features",
+            "--features",
+            "sentry/transport",
+        ])
         .spawn()?
         .wait()?;
 
