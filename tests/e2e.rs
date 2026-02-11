@@ -15,7 +15,7 @@ async fn test_example_app() -> Result<(), Box<dyn Error>> {
             "app",
             "--all-features",
             "--features",
-            "sentry/transport",
+            "sentry/ureq",
         ])
         .spawn()?
         .wait()?;
