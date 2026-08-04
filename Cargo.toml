@@ -5,23 +5,23 @@ license = "MIT OR Apache-2.0"
 name = "sentry-rust-minidump"
 readme = "README.md"
 repository = "https://github.com/timfish/sentry-rust-minidump"
-version = "0.16.0"
+version = "0.17.0"
 
 [[example]]
 name = "app"
 required-features = ["ipc"]
 
 [dependencies]
-minidumper-child = "0.3"
-sentry = { version = "0.48", default-features = false }
+minidumper-child = "0.5"
+sentry = {version = "0.49", default-features = false}
+serde = {version = "1", features = ["derive"], optional = true}
+serde_json = {version = "1", optional = true}
 thiserror = "2"
-serde = { version = "1", features = ["derive"], optional = true }
-serde_json = { version = "1", optional = true }
 
 [dev-dependencies]
 actix-rt = "2.11"
 sadness-generator = "0.7"
-sentry-test-server = { git = "https://github.com/timfish/sentry-test-server.git", rev = "41cb654" }
+sentry-test-server = {git = "https://github.com/timfish/sentry-test-server.git", rev = "d062995"}
 
 [features]
 ipc = ["dep:serde", "dep:serde_json"]

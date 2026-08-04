@@ -18,8 +18,8 @@ application code.
 
 ```toml
 [dependencies]
-sentry = "0.48"
-sentry-rust-minidump = "0.15"
+sentry = "0.49"
+sentry-rust-minidump = "0.17"
 ```
 
 ```rust
