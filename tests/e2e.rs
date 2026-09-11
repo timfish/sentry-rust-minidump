@@ -41,6 +41,12 @@ async fn test_example_app() -> Result<(), Box<dyn Error>> {
     assert_eq!(user.email, Some("john@doe.town".into()));
     assert_eq!(user.username, Some("john_doe".into()));
 
+    // Set by `before_capture` in the example app
+    assert_eq!(
+        event.tags.get("crash_reporter").map(String::as_str),
+        Some("example")
+    );
+
     let env_item = env
         .items()
         .find(|item| matches!(item, EnvelopeItem::Attachment(_)))
