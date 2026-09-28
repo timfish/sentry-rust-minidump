@@ -1,9 +1,19 @@
+//! **Deprecated:** use [`sentry-minidump`] instead. It is part of the
+//! official Sentry Rust SDK. Enable the `minidump` feature of `sentry`
+//! and add `sentry::minidump::MinidumpIntegration` to your
+//! `ClientOptions`. This crate will get no more updates.
+//!
+//! [`sentry-minidump`]: https://docs.rs/sentry-minidump
+//!
 //! Captures native crashes as minidumps in a separate process and sends
 //! them to Sentry as attachments.
 //!
 //! [`init`] covers the common case. Use [`Builder`] when the crash
 //! reporter process needs a custom crashes directory, environment
 //! variable name, process name or arguments.
+
+// Deprecated items still use each other inside this crate.
+#![allow(deprecated)]
 
 use std::{
     ffi::OsString,
@@ -38,6 +48,10 @@ pub const DEFAULT_FLUSH_TIMEOUT: Duration = Duration::from_secs(5);
 ///
 /// It is safe to call this before the Sentry client exists, for example
 /// to skip log output in the crash reporter process.
+#[deprecated(
+    since = "0.18.1",
+    note = "use `sentry::minidump::MinidumpIntegration::is_crash_reporter_process` instead"
+)]
 pub fn is_crash_reporter_process() -> bool {
     std::env::var_os(DEFAULT_SERVER_ENV_VAR).is_some()
 }
@@ -109,6 +123,10 @@ type BeforeCapture = Box<dyn Fn(&mut Scope, &Path) + Send + Sync + 'static>;
 ///     .install(&client)
 ///     .expect("could not start crash reporter");
 /// ```
+#[deprecated(
+    since = "0.18.1",
+    note = "use `sentry::minidump::MinidumpIntegration` with `ClientOptions::add_integration` instead"
+)]
 #[must_use = "Call install() or the crash reporter won't start"]
 pub struct Builder {
     crashes_dir: Option<PathBuf>,
@@ -367,6 +385,10 @@ impl Builder {
 /// Starts the crash reporter with the default configuration.
 ///
 /// This is the same as `Builder::new().install(sentry_client)`.
+#[deprecated(
+    since = "0.18.1",
+    note = "use `sentry::minidump::MinidumpIntegration` with `ClientOptions::add_integration` instead"
+)]
 #[must_use = "The return value from init() should not be dropped until the program exits"]
 pub fn init(sentry_client: &sentry::Client) -> Result<Handle, Error> {
     Builder::new().install(sentry_client)

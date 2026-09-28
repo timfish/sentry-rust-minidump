@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 fn main() {
     // Use this to skip logic in the crash reporter process.
     if sentry_rust_minidump::is_crash_reporter_process() {

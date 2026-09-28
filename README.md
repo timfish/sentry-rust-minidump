@@ -1,5 +1,47 @@
 # `sentry-rust-minidump`
 
+> [!WARNING]
+> This crate is deprecated. Use [`sentry-minidump`](https://crates.io/crates/sentry-minidump), which is now part of the official [Sentry Rust SDK](https://github.com/getsentry/sentry-rust). This crate will get no more updates.
+
+## Migration
+
+Enable the `minidump` feature of `sentry` (0.49.3 or later) and remove `sentry-rust-minidump`:
+
+```toml
+[dependencies]
+sentry = { version = "0.49.3", features = ["minidump"] }
+```
+
+Replace `sentry_rust_minidump::init` or `Builder` with `MinidumpIntegration`. The `Builder` options have the same names:
+
+```rust
+fn main() {
+    let _guard = sentry::init(
+        sentry::ClientOptions::new()
+            .dsn("__YOUR_DSN__")
+            .add_integration(
+                sentry::minidump::MinidumpIntegration::new()
+                    .crashes_dir("/var/lib/my-app/crashes"),
+            ),
+    );
+    // Only the app process reaches here.
+
+    App::run();
+}
+```
+
+With the `ipc` feature, send scope updates through the integration:
+
+```rust
+sentry::with_integration(|minidump: &sentry::minidump::MinidumpIntegration, _| {
+    minidump.set_user(Some(user.clone()));
+});
+```
+
+See the [`sentry-minidump` docs](https://docs.rs/sentry-minidump) for details.
+
+## Previous documentation
+
 ![Master branch integration test status](https://img.shields.io/github/actions/workflow/status/timfish/sentry-rust-minidump/test.yml?label=Integration%20Tests&style=for-the-badge)
 
 Uses the [`minidumper-child`](https://github.com/timfish/minidumper-child) crate
